@@ -28,6 +28,11 @@ export interface SimilarPlant {
   imageUrl?: string;
 }
 
+export interface GroundingSource {
+  title: string;
+  uri: string;
+}
+
 export interface PlantDetails {
   id: string;
   name: string;
@@ -50,6 +55,7 @@ export interface PlantDetails {
   confidence: number;
   imageUrl?: string; // Store reference image from identification
   customIcon?: string; // Identifier for user-selected icon
+  groundingSources?: GroundingSource[];
 }
 
 export interface Diagnosis {
@@ -61,6 +67,7 @@ export interface Diagnosis {
   treatment: string[];
   prevention: string[];
   timestamp: string;
+  groundingSources?: GroundingSource[];
 }
 
 export interface HistoryItem {

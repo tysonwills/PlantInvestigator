@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { PlantDetails, Diagnosis } from "./types";
+import { PlantDetails, Diagnosis, GroundingSource } from "./types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -64,39 +64,53 @@ const DIAGNOSIS_SCHEMA = {
   required: ["condition", "severity", "symptoms", "causes", "treatment", "prevention"]
 };
 
+function extractGroundingSources(response: GenerateContentResponse): GroundingSource[] {
+  const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+  return chunks
+    .filter((chunk: any) => chunk.web)
+    .map((chunk: any) => ({
+      title: chunk.web.title,
+      uri: chunk.web.uri
+    }));
+}
+
 export async function identifyPlant(base64Image: string): Promise<PlantDetails> {
   const response: GenerateContentResponse = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: [
       {
         parts: [
-          { text: "Identify this plant accurately. Provide detailed care instructions and check for toxicity/weed status. Also fetch a high-quality botanical image URL from Unsplash and suggest 3 similar plants with their representative Unsplash image URLs." },
+          { text: "Identify this plant accurately using botanical databases. Provide detailed care instructions, check for toxicity/weed status, and fetch a high-quality botanical reference image from Unsplash. Use Google Search to verify the identification against live records." },
           { inlineData: { mimeType: "image/jpeg", data: base64Image } }
         ]
       }
     ],
     config: {
+      tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
       responseSchema: PLANT_ID_SCHEMA
     }
   });
 
   const data = JSON.parse(response.text);
-  return { ...data, id: crypto.randomUUID() };
+  const groundingSources = extractGroundingSources(response);
+  return { ...data, id: crypto.randomUUID(), groundingSources };
 }
 
 export async function getPlantDetailsByName(name: string): Promise<PlantDetails> {
   const response: GenerateContentResponse = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: `Provide detailed botanical information and care instructions for the plant: ${name}. Fetch a perfect high-quality botanical image URL from Unsplash. Check for toxicity/weed status and suggest similar plants with their representative Unsplash image URLs.`,
+    contents: `Search botanical databases for detailed information and care instructions for: ${name}. Verify scientific names and origins.`,
     config: {
+      tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
       responseSchema: PLANT_ID_SCHEMA
     }
   });
 
   const data = JSON.parse(response.text);
-  return { ...data, id: crypto.randomUUID() };
+  const groundingSources = extractGroundingSources(response);
+  return { ...data, id: crypto.randomUUID(), groundingSources };
 }
 
 export async function diagnosePlant(base64Image: string): Promise<Diagnosis> {
@@ -105,19 +119,21 @@ export async function diagnosePlant(base64Image: string): Promise<Diagnosis> {
     contents: [
       {
         parts: [
-          { text: "Analyze the health of this plant. Identify symptoms of disease, pests, or nutrient deficiency. Provide specific treatments and prevention steps." },
+          { text: "Analyze the health of this plant by cross-referencing diagnostic symptoms from horticultural databases. Identify diseases, pests, or deficiencies. Use Google Search to find current organic treatments." },
           { inlineData: { mimeType: "image/jpeg", data: base64Image } }
         ]
       }
     ],
     config: {
+      tools: [{ googleSearch: {} }],
       responseMimeType: "application/json",
       responseSchema: DIAGNOSIS_SCHEMA
     }
   });
 
   const data = JSON.parse(response.text);
-  return { ...data, id: crypto.randomUUID(), timestamp: new Date().toISOString() };
+  const groundingSources = extractGroundingSources(response);
+  return { ...data, id: crypto.randomUUID(), timestamp: new Date().toISOString(), groundingSources };
 }
 
 export async function getNearbyGardenCenters(lat: number, lng: number) {
@@ -146,7 +162,7 @@ export async function getNearbyGardenCenters(lat: number, lng: number) {
 export async function getDailyPlantTip(): Promise<{ title: string; tip: string }> {
   const response: GenerateContentResponse = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: "Provide a unique, expert-level gardening or plant care tip for today. Format as JSON with 'title' and 'tip' keys. The tip should be 1-2 practical sentences.",
+    contents: "Provide a unique, expert-level gardening or plant care tip for today based on seasonal botanical best practices. Format as JSON with 'title' and 'tip' keys.",
     config: {
       responseMimeType: "application/json",
       responseSchema: {

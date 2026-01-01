@@ -46,39 +46,64 @@ const DiagnosisView: React.FC<DiagnosisViewProps> = ({ onResult }) => {
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div className="rounded-[3rem] overflow-hidden shadow-2xl h-fit border border-slate-50 bg-white">
-            <img src={capturedImage} alt="Unhealthy Plant" className="w-full h-[450px] object-cover" />
-            <div className="p-12">
-              <div className="flex flex-wrap items-center justify-between mb-10 gap-6">
-                <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">{result.condition}</h2>
-                <span className={`${severityColors[result.severity]} px-6 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.2em] border shadow-sm`}>
-                  {result.severity} Priority
-                </span>
-              </div>
-              
-              <div className="space-y-10">
-                <div>
-                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] mb-5">Symptom Log</h4>
-                  <div className="flex flex-wrap gap-3">
-                    {result.symptoms.map(s => (
-                      <span key={s} className="bg-slate-50 text-slate-800 px-5 py-3 rounded-full text-sm font-bold border border-slate-100 shadow-sm">{s}</span>
-                    ))}
-                  </div>
+          <div className="space-y-8">
+            <div className="rounded-[3rem] overflow-hidden shadow-2xl h-fit border border-slate-50 bg-white">
+              <img src={capturedImage} alt="Unhealthy Plant" className="w-full h-[450px] object-cover" />
+              <div className="p-12">
+                <div className="flex flex-wrap items-center justify-between mb-10 gap-6">
+                  <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">{result.condition}</h2>
+                  <span className={`${severityColors[result.severity]} px-6 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.2em] border shadow-sm`}>
+                    {result.severity} Priority
+                  </span>
                 </div>
                 
-                <div>
-                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] mb-5">Potential Causes</h4>
-                  <div className="space-y-4">
-                    {result.causes.map(c => (
-                      <div key={c} className="flex items-center text-slate-600 text-[15px] font-bold">
-                        <div className="w-3 h-3 bg-amber-400 rounded-full mr-5 shadow-[0_0_10px_rgba(251,191,36,0.4)]"></div>
-                        {c}
-                      </div>
-                    ))}
+                <div className="space-y-10">
+                  <div>
+                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] mb-5">Symptom Log</h4>
+                    <div className="flex flex-wrap gap-3">
+                      {result.symptoms.map(s => (
+                        <span key={s} className="bg-slate-50 text-slate-800 px-5 py-3 rounded-full text-sm font-bold border border-slate-100 shadow-sm">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] mb-5">Potential Causes</h4>
+                    <div className="space-y-4">
+                      {result.causes.map(c => (
+                        <div key={c} className="flex items-center text-slate-600 text-[15px] font-bold">
+                          <div className="w-3 h-3 bg-amber-400 rounded-full mr-5 shadow-[0_0_10px_rgba(251,191,36,0.4)]"></div>
+                          {c}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+
+            {result.groundingSources && result.groundingSources.length > 0 && (
+              <div className="bg-white p-10 rounded-[3rem] border border-slate-50 shadow-sm">
+                <h4 className="text-[11px] font-black text-blue-500 uppercase tracking-[0.3em] mb-6 flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  Horticultural Evidence
+                </h4>
+                <div className="space-y-3">
+                  {result.groundingSources.map((source, i) => (
+                    <a 
+                      key={i} 
+                      href={source.uri} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-500 hover:bg-blue-50 transition-all group"
+                    >
+                      <span className="text-sm font-bold text-slate-700 truncate mr-4">{source.title}</span>
+                      <svg className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-10">

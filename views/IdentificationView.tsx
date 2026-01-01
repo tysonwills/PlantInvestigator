@@ -10,11 +10,14 @@ interface IdentificationViewProps {
 }
 
 const VIBRANT_PLACEHOLDERS = [
-  "https://images.unsplash.com/photo-1463936575829-25148e1db1b8?q=80&w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1453904300235-0f2f60b15b5d?q=80&w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1463320326303-11dad8c3008a?q=80&w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1416870230247-3b461463779e?q=80&w=800&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1501004318641-729e8e3986eff?q=80&w=800&auto=format&fit=crop"
+  "https://images.unsplash.com/photo-1463936575829-25148e1db1b8?q=80&w=800&auto=format&fit=crop", // Cacti/Succulents
+  "https://images.unsplash.com/photo-1453904300235-0f2f60b15b5d?q=80&w=800&auto=format&fit=crop", // Ferns/Forest
+  "https://images.unsplash.com/photo-1463320326303-11dad8c3008a?q=80&w=800&auto=format&fit=crop", // Tropical leaves
+  "https://images.unsplash.com/photo-1416870230247-3b461463779e?q=80&w=800&auto=format&fit=crop", // Botanical garden
+  "https://images.unsplash.com/photo-1501004318641-729e8e3986eff?q=80&w=800&auto=format&fit=crop", // Houseplants
+  "https://images.unsplash.com/photo-1520412099551-62b6bafeb5bb?q=80&w=800&auto=format&fit=crop", // Potted plants
+  "https://images.unsplash.com/photo-1525498122316-396d85993e98?q=80&w=800&auto=format&fit=crop", // Flowers
+  "https://images.unsplash.com/photo-1470058869958-2a77a67c023d?q=80&w=800&auto=format&fit=crop"  // Deep nature
 ];
 
 const AccordionItem: React.FC<{
@@ -72,8 +75,8 @@ const IdentificationView: React.FC<IdentificationViewProps> = ({ onResult, onAdd
   const [result, setResult] = useState<PlantDetails | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [viewMode, setViewMode] = useState<'capture' | 'reference'>('capture');
 
-  // Zoom and Pan state
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -122,6 +125,7 @@ const IdentificationView: React.FC<IdentificationViewProps> = ({ onResult, onAdd
       setResult(data);
       setCapturedImage(null); 
       setOpenIndex(0);
+      setViewMode('reference');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error("Comparison failed", error);
@@ -207,15 +211,16 @@ const IdentificationView: React.FC<IdentificationViewProps> = ({ onResult, onAdd
     return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" /></svg>;
   };
 
-  const getPlaceholder = (seed: string | number) => {
-    const index = typeof seed === 'string' 
-      ? seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % VIBRANT_PLACEHOLDERS.length
-      : seed % VIBRANT_PLACEHOLDERS.length;
-    return VIBRANT_PLACEHOLDERS[index];
+  const getPlaceholder = (seed: string) => {
+    const s = seed.toLowerCase();
+    const hash = s.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return VIBRANT_PLACEHOLDERS[hash % VIBRANT_PLACEHOLDERS.length];
   };
 
   if (result) {
-    const displayImageUrl = result.imageUrl || getPlaceholder(result.name);
+    const referenceImageUrl = result.imageUrl || getPlaceholder(result.name);
+    const displayImageUrl = viewMode === 'capture' && capturedImage ? capturedImage : referenceImageUrl;
+    
     const careItems = [
       { label: 'Hydration', value: result.careGuide.watering, icon: 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7', color: 'text-blue-500', bg: 'bg-blue-50', badge: getBadge(result.careGuide.watering, 'water') },
       { label: 'Luminosity', value: result.careGuide.light, icon: 'M12 3v1m0 16v1m9-9h-1M4 9h-1', color: 'text-amber-500', bg: 'bg-amber-50', badge: getBadge(result.careGuide.light, 'light') },
@@ -279,23 +284,52 @@ const IdentificationView: React.FC<IdentificationViewProps> = ({ onResult, onAdd
               onTouchMove={handleMouseMove}
             >
               <div className="w-full h-full transition-transform duration-75 cursor-move" style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, transformOrigin: '0 0' }}>
-                <img src={displayImageUrl} alt="Botanical Record" className="w-full h-full object-cover select-none pointer-events-none" />
+                <img src={displayImageUrl} alt="Botanical Record" className="w-full h-full object-cover select-none pointer-events-none transition-opacity duration-500" />
               </div>
               
+              <div className="absolute top-6 left-6 flex flex-col space-y-3">
+                 <div className="bg-botanist/90 backdrop-blur-md text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg border border-white/20">
+                    {viewMode === 'capture' ? 'Your Live Capture' : 'Botanical Reference'}
+                 </div>
+                 {result.isToxic && <div className="bg-red-500/90 backdrop-blur-md text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg border border-white/20">Toxic to Pets</div>}
+              </div>
+
               <div className="absolute bottom-6 right-6 flex flex-col space-y-3">
                 <button onClick={handleZoomIn} className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-slate-800 shadow-xl border border-white/50 hover:bg-white transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg></button>
                 <button onClick={handleZoomOut} className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-slate-800 shadow-xl border border-white/50 hover:bg-white transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M20 12H4" /></svg></button>
-                <button onClick={handleResetZoom} className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-slate-800 shadow-xl border border-white/50 hover:bg-white transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg></button>
+                <button onClick={() => setViewMode(viewMode === 'capture' ? 'reference' : 'capture')} className="w-12 h-12 bg-botanist text-white rounded-2xl flex items-center justify-center shadow-xl border border-botanist/50 hover:bg-botanist-dark transition-colors" title="Toggle Reference Image">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                </button>
               </div>
-              
-              <div className="absolute top-6 left-6 bg-botanist/90 backdrop-blur-md text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg border border-white/20">Botanical Record</div>
-              {result.isToxic && <div className="absolute top-16 left-6 bg-red-500/90 backdrop-blur-md text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg border border-white/20">Toxic to Pets</div>}
-              {result.isWeed && <div className="absolute top-6 right-6 bg-amber-500/90 backdrop-blur-md text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg border border-white/20">Weed Species</div>}
             </div>
+
             <div className="bg-white p-10 rounded-[3rem] border border-slate-50 shadow-sm">
                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Expert Description</h4>
                <p className="text-slate-600 font-semibold leading-relaxed text-lg">{result.description}</p>
             </div>
+
+            {result.groundingSources && result.groundingSources.length > 0 && (
+              <div className="bg-white p-10 rounded-[3rem] border border-slate-50 shadow-sm">
+                <h4 className="text-[11px] font-black text-botanist uppercase tracking-[0.3em] mb-6 flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+                  Botanical Database Sources
+                </h4>
+                <div className="space-y-3">
+                  {result.groundingSources.map((source, i) => (
+                    <a 
+                      key={i} 
+                      href={source.uri} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-botanist hover:bg-botanist/5 transition-all group"
+                    >
+                      <span className="text-sm font-bold text-slate-700 truncate mr-4">{source.title}</span>
+                      <svg className="w-4 h-4 text-slate-400 group-hover:text-botanist transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-8">
@@ -340,7 +374,7 @@ const IdentificationView: React.FC<IdentificationViewProps> = ({ onResult, onAdd
                   )}
                   <div className="h-48 overflow-hidden relative">
                     <img 
-                      src={plant.imageUrl || getPlaceholder(idx)} 
+                      src={plant.imageUrl || getPlaceholder(plant.name)} 
                       alt={plant.name} 
                       className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${!plant.imageUrl ? 'brightness-90 contrast-125' : ''}`}
                     />
@@ -357,7 +391,7 @@ const IdentificationView: React.FC<IdentificationViewProps> = ({ onResult, onAdd
                     </div>
                     <p className="text-slate-500 font-semibold leading-relaxed mb-8 text-[15px] flex-1">{plant.reason}</p>
                     <div className="pt-6 border-t border-slate-50 mt-auto">
-                      <button onClick={() => handleCompareRelative(plant.name)} className="text-botanist font-black text-xs uppercase tracking-[0.2em] flex items-center group-hover:translate-x-2 transition-transform w-full">Compare Relative<svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg></button>
+                      <button onClick={() => handleCompareRelative(plant.name)} className="text-botanist font-black text-xs uppercase tracking-[0.2em] flex items-center group-hover:translate-x-2 transition-transform w-full text-left">Compare Relative<svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg></button>
                     </div>
                   </div>
                 </div>
