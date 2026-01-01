@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PlantDetails, AppView } from '../types';
 
@@ -25,7 +24,7 @@ const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant
   const [iconPickerId, setIconPickerId] = useState<string | null>(null);
 
   const handleSelectIcon = (e: React.MouseEvent, plant: PlantDetails, iconId: string) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation();
     onUpdatePlant({ ...plant, customIcon: iconId });
     setIconPickerId(null);
   };
@@ -54,52 +53,51 @@ const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20 max-w-4xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-slate-100 pb-10">
         <div>
-          <h2 className="text-5xl font-extrabold text-slate-900 tracking-tight mb-4">My Garden</h2>
-          <p className="text-slate-400 font-bold text-lg">A personalized sanctuary of your botanical companions.</p>
+          <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-2">My Garden</h2>
+          <p className="text-slate-400 font-bold text-base">A sanctuary of your botanical companions.</p>
         </div>
-        <div className="bg-botanist/10 px-6 py-3 rounded-full text-botanist text-sm font-black uppercase tracking-widest border border-botanist/5">
+        <div className="bg-botanist/10 px-6 py-2 rounded-full text-botanist text-xs font-black uppercase tracking-widest border border-botanist/5">
           {garden.length} Total Plants
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="space-y-10">
         {garden.map((plant) => (
           <div 
             key={plant.id} 
             onClick={() => onViewDetails(plant)}
-            className="group relative bg-white rounded-[3rem] overflow-hidden shadow-sm border border-slate-100/50 transition-all duration-500 hover:shadow-2xl hover:shadow-botanist/10 hover:-translate-y-2 cursor-pointer"
+            className="group relative bg-white rounded-[3.5rem] overflow-hidden shadow-xl border border-slate-100/50 transition-all duration-500 hover:shadow-2xl hover:shadow-botanist/10 cursor-pointer w-full"
           >
-            <div className="relative h-64 overflow-hidden">
+            {/* Image Section */}
+            <div className="relative h-80 overflow-hidden">
               <img 
-                src={plant.imageUrl || "https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=400&auto=format&fit=crop"} 
+                src={plant.imageUrl || "https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=800&auto=format&fit=crop"} 
                 alt={plant.name} 
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
               />
               
-              {/* Custom Icon Overlay */}
-              <div className="absolute top-4 left-4">
+              {/* Overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+              
+              <div className="absolute top-6 left-6">
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     setIconPickerId(iconPickerId === plant.id ? null : plant.id);
                   }}
-                  className="w-12 h-12 bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl flex items-center justify-center text-white hover:bg-botanist transition-all shadow-lg group/icon"
+                  className="w-12 h-12 bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl flex items-center justify-center text-white hover:bg-botanist transition-all shadow-lg group/icon"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={getIconPath(plant.customIcon)} />
                   </svg>
-                  <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 opacity-0 group-hover/icon:opacity-100 transition-opacity">
-                    <svg className="w-2 h-2 text-botanist" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
-                  </div>
                 </button>
 
-                {/* Icon Picker Popover */}
                 {iconPickerId === plant.id && (
                   <div className="absolute top-14 left-0 bg-white/95 backdrop-blur-xl border border-slate-200 p-4 rounded-3xl shadow-2xl z-50 flex flex-wrap gap-2 w-48 animate-in zoom-in-90 duration-200">
-                    <p className="w-full text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">Select Custom Icon</p>
+                    <p className="w-full text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">Icon Preference</p>
                     {AVAILABLE_ICONS.map(icon => (
                       <button
                         key={icon.id}
@@ -111,63 +109,65 @@ const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant
                         </svg>
                       </button>
                     ))}
-                    <button
-                      onClick={(e) => handleSelectIcon(e, plant, '')}
-                      className="w-full mt-2 text-[10px] font-black uppercase text-slate-400 hover:text-red-500 py-2"
-                    >
-                      Clear Selection
-                    </button>
                   </div>
                 )}
               </div>
 
-              <div className="absolute top-4 right-4 flex space-x-2">
+              <div className="absolute top-6 right-6">
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     onRemove(plant.id);
                   }}
-                  className="p-2 bg-white/20 backdrop-blur-md rounded-xl text-white hover:bg-red-500 transition-colors border border-white/20"
+                  className="w-10 h-10 bg-black/20 backdrop-blur-md rounded-xl text-white/70 hover:bg-red-500 hover:text-white transition-all border border-white/10 flex items-center justify-center"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
               </div>
-              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                <h4 className="text-2xl font-extrabold text-white tracking-tight">{plant.name}</h4>
-                <p className="text-botanist font-bold italic text-sm">{plant.botanicalName}</p>
+
+              <div className="absolute bottom-10 left-10">
+                <h4 className="text-5xl font-black text-white tracking-tight leading-none mb-2">{plant.name}</h4>
+                <p className="text-botanist font-bold italic text-xl opacity-90">{plant.botanicalName}</p>
               </div>
             </div>
 
-            <div className="p-8">
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center text-sm font-bold text-slate-500">
-                  <div className="w-2 h-2 bg-botanist rounded-full mr-3"></div>
-                  <span className="opacity-70 mr-2">Water:</span> {plant.careGuide.watering}
+            {/* Care Info Section */}
+            <div className="p-10 md:p-12">
+              <div className="space-y-6 mb-12">
+                <div className="flex items-start">
+                  <div className="flex items-center space-x-3 w-32 flex-shrink-0 pt-1">
+                    <div className="w-1.5 h-6 bg-botanist rounded-full"></div>
+                    <span className="text-slate-400 font-black uppercase tracking-widest text-xs">Water:</span>
+                  </div>
+                  <p className="text-slate-700 font-bold text-lg leading-relaxed">{plant.careGuide.watering}</p>
                 </div>
-                <div className="flex items-center text-sm font-bold text-slate-500">
-                  <div className="w-2 h-2 bg-botanist rounded-full mr-3"></div>
-                  <span className="opacity-70 mr-2">Light:</span> {plant.careGuide.light}
+                <div className="flex items-start">
+                  <div className="flex items-center space-x-3 w-32 flex-shrink-0 pt-1">
+                    <div className="w-1.5 h-6 bg-botanist rounded-full"></div>
+                    <span className="text-slate-400 font-black uppercase tracking-widest text-xs">Light:</span>
+                  </div>
+                  <p className="text-slate-700 font-bold text-lg leading-relaxed">{plant.careGuide.light}</p>
                 </div>
               </div>
               
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     onNavigate(AppView.REMINDERS);
                   }}
-                  className="flex-1 bg-slate-900 text-white px-4 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-botanist transition-colors"
+                  className="flex-1 bg-botanist text-white px-8 py-5 rounded-full text-sm font-black uppercase tracking-widest hover:bg-botanist-dark transition-all shadow-xl shadow-botanist/10"
                 >
                   Schedule Care
                 </button>
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    onNavigate(AppView.DIAGNOSE);
+                    onViewDetails(plant);
                   }}
-                  className="flex-1 bg-botanist/10 text-botanist px-4 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-botanist hover:text-white transition-colors border border-botanist/5"
+                  className="flex-1 bg-white border-2 border-botanist/20 text-botanist px-8 py-5 rounded-full text-sm font-black uppercase tracking-widest hover:bg-botanist hover:text-white transition-all"
                 >
-                  Diagnose
+                  Full Details
                 </button>
               </div>
             </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Reminder } from '../types';
 
@@ -61,7 +60,7 @@ const NotificationOverlay: React.FC<NotificationOverlayProps> = ({ reminders, on
               setIsVisible(false);
               onViewReminders();
             }}
-            className="flex-1 sm:flex-none px-6 py-4 bg-slate-900 text-white rounded-2xl hover:bg-black transition-all shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center"
+            className="flex-1 sm:flex-none px-6 py-4 bg-botanist text-white rounded-2xl hover:bg-botanist-dark transition-all shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center"
           >
             <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

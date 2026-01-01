@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Reminder, PlantDetails } from '../types';
 
@@ -141,7 +140,7 @@ const RemindersView: React.FC<RemindersViewProps> = ({ reminders, garden, onAdd,
               />
             </div>
             <div className="md:col-span-2">
-              <button type="submit" className="w-full bg-slate-900 text-white font-black py-5 rounded-2xl hover:bg-black transition-all">Save Care Task</button>
+              <button type="submit" className="w-full bg-botanist text-white font-black py-5 rounded-2xl hover:bg-botanist-dark transition-all shadow-lg shadow-botanist/10">Save Care Task</button>
             </div>
           </form>
         </div>
