@@ -31,9 +31,23 @@ const PLANT_ID_SCHEMA = {
         }
       },
       required: ["watering", "light", "soil", "humidity", "fertilizer", "homeRemedies"]
+    },
+    similarPlants: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          name: { type: Type.STRING, description: "Common name of a similar plant" },
+          reason: { type: Type.STRING, description: "Why it is similar (visual or care-wise)" },
+          careMatch: { type: Type.BOOLEAN, description: "True if care needs are very similar" },
+          imageUrl: { type: Type.STRING, description: "A high-quality Unsplash image URL (from images.unsplash.com) that represents this specific plant species accurately." }
+        },
+        required: ["name", "reason", "careMatch", "imageUrl"]
+      },
+      description: "List of 3 similar-looking or similar-care plants"
     }
   },
-  required: ["name", "botanicalName", "family", "description", "origin", "isToxic", "toxicityDetails", "isWeed", "confidence", "careGuide"]
+  required: ["name", "botanicalName", "family", "description", "origin", "isToxic", "toxicityDetails", "isWeed", "confidence", "careGuide", "similarPlants"]
 };
 
 const DIAGNOSIS_SCHEMA = {
@@ -55,11 +69,25 @@ export async function identifyPlant(base64Image: string): Promise<PlantDetails> 
     contents: [
       {
         parts: [
-          { text: "Identify this plant accurately. Provide detailed care instructions and check for toxicity/weed status." },
+          { text: "Identify this plant accurately. Provide detailed care instructions and check for toxicity/weed status. Also suggest 3 similar plants with their representative Unsplash image URLs." },
           { inlineData: { mimeType: "image/jpeg", data: base64Image } }
         ]
       }
     ],
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: PLANT_ID_SCHEMA
+    }
+  });
+
+  const data = JSON.parse(response.text);
+  return { ...data, id: crypto.randomUUID() };
+}
+
+export async function getPlantDetailsByName(name: string): Promise<PlantDetails> {
+  const response: GenerateContentResponse = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: `Provide detailed botanical information and care instructions for the plant: ${name}. Check for toxicity/weed status and suggest similar plants with their representative Unsplash image URLs.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: PLANT_ID_SCHEMA

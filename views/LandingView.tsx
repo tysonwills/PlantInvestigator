@@ -8,11 +8,30 @@ interface LandingViewProps {
   isPremium: boolean;
 }
 
+// Curated list of high-quality, "friendly" plant images from Unsplash
+const FRIENDLY_PLANT_IMAGES = [
+  "https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=1200&auto=format&fit=crop", // Fiddle Leaf Fig
+  "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?q=80&w=1200&auto=format&fit=crop", // Monstera
+  "https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?q=80&w=1200&auto=format&fit=crop", // Snake Plant
+  "https://images.unsplash.com/photo-1631510444342-a79051066042?q=80&w=1200&auto=format&fit=crop", // Pothos
+  "https://images.unsplash.com/photo-1512428813834-c702c7702b78?q=80&w=1200&auto=format&fit=crop", // Potted Succulent
+  "https://images.unsplash.com/photo-1614594805323-e5a73277e499?q=80&w=1200&auto=format&fit=crop", // Chinese Money Plant
+  "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?q=80&w=1200&auto=format&fit=crop", // Calathea
+  "https://images.unsplash.com/photo-1525498128493-380d1990a112?q=80&w=1200&auto=format&fit=crop", // Tropical Leaves
+  "https://images.unsplash.com/photo-1516706562550-01dc7c50406d?q=80&w=1200&auto=format&fit=crop", // String of Pearls
+  "https://images.unsplash.com/photo-1592150621744-aca64f48394a?q=80&w=1200&auto=format&fit=crop"  // Bird of Paradise
+];
+
 const LandingView: React.FC<LandingViewProps> = ({ onNavigate, isPremium }) => {
   const [dailyTip, setDailyTip] = useState<{ title: string; tip: string } | null>(null);
   const [tipLoading, setTipLoading] = useState(true);
+  const [heroImage, setHeroImage] = useState(FRIENDLY_PLANT_IMAGES[0]);
 
   useEffect(() => {
+    // Select a unique random plant image on every component mount (app start/navigation)
+    const randomIndex = Math.floor(Math.random() * FRIENDLY_PLANT_IMAGES.length);
+    setHeroImage(FRIENDLY_PLANT_IMAGES[randomIndex]);
+
     async function fetchTip() {
       try {
         const tip = await getDailyPlantTip();
@@ -42,9 +61,24 @@ const LandingView: React.FC<LandingViewProps> = ({ onNavigate, isPremium }) => {
       textColor: 'text-white'
     },
     {
+      view: AppView.GARDEN,
+      title: 'My Garden',
+      desc: 'Organize your plant collection in one sanctuary.',
+      isPro: true,
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13m18-13c-1.168-.776-2.754-1.253-4.5-1.253s-3.332.477-4.5 1.253v13c1.168-.776 2.754-1.253 4.5-1.253s3.332.477 4.5 1.253v-13z" />
+        </svg>
+      ),
+      color: 'bg-emerald-600',
+      lightColor: 'bg-emerald-50',
+      textColor: 'text-white'
+    },
+    {
       view: AppView.REMINDERS,
       title: 'Care Tasks',
       desc: 'Smart schedules for watering and plant health.',
+      isPro: true,
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -86,32 +120,41 @@ const LandingView: React.FC<LandingViewProps> = ({ onNavigate, isPremium }) => {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-      {/* Hero Welcome */}
-      <section className="relative overflow-hidden bg-botanist rounded-[3.5rem] p-10 md:p-16 text-white shadow-2xl shadow-botanist/20 group">
-        <div className="relative z-10 max-w-2xl">
-          <h2 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight text-white">
-            Hello, Gardener!
+      {/* Restyled Hero Welcome Section */}
+      <section className="relative overflow-hidden bg-botanist rounded-[3.5rem] p-10 md:p-16 text-white shadow-2xl shadow-botanist/20 group min-h-[400px] flex items-center">
+        <div className="relative z-20 max-w-2xl">
+          <h2 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight text-white drop-shadow-sm">
+            Hello, <br /> Gardener!
           </h2>
-          <p className="text-white/90 text-xl md:text-2xl mb-10 font-medium leading-relaxed opacity-95">
+          <p className="text-white/95 text-xl md:text-2xl mb-10 font-medium leading-relaxed max-w-md">
             Everything you need to keep your urban oasis flourishing is right here at your fingertips.
           </p>
-          <div className="flex items-center space-x-3 text-sm bg-white/20 backdrop-blur-xl px-6 py-3 rounded-full w-fit border border-white/20">
+          <div className="flex items-center space-x-3 text-sm bg-white/20 backdrop-blur-xl px-6 py-3 rounded-full w-fit border border-white/30 shadow-lg">
             <span className="w-2.5 h-2.5 bg-green-300 rounded-full animate-pulse shadow-[0_0_10px_rgba(110,231,183,1)]"></span>
-            <span className="font-extrabold uppercase tracking-widest text-[11px]">AI Hub Active</span>
+            <span className="font-black uppercase tracking-[0.2em] text-[10px]">FloraGenius Hub Active</span>
           </div>
         </div>
 
-        {/* Decorative Vibrant Plant Placeholder */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1/3 h-full hidden lg:block select-none pointer-events-none transition-transform duration-700 group-hover:scale-105">
-           <img 
-            src="https://images.unsplash.com/photo-1614594975525-e45190c55d0b?q=80&w=800&auto=format&fit=crop" 
-            alt="Vibrant Plant" 
-            className="w-full h-full object-contain object-right opacity-80 mix-blend-lighten"
-           />
+        {/* Dynamic Botanical Accent - Randomly loaded plant image */}
+        <div className="absolute right-0 top-0 bottom-0 w-2/3 md:w-1/2 select-none pointer-events-none transition-all duration-1000 group-hover:scale-105 z-10">
+          <div className="relative h-full w-full">
+            <img 
+              src={heroImage} 
+              alt="Random Botanical Friend" 
+              className="w-full h-full object-cover object-center md:object-right opacity-40 md:opacity-90 mask-fade-left"
+              style={{
+                maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
+                WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)'
+              }}
+            />
+            {/* Soft Overlay for text readability on mobile */}
+            <div className="absolute inset-0 bg-gradient-to-r from-botanist via-botanist/40 to-transparent z-0 md:hidden"></div>
+          </div>
         </div>
 
-        <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-botanist-light/10 rounded-full -mr-20 -mb-20 blur-[100px]"></div>
+        {/* Background Decorative Blurs */}
+        <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-white/10 rounded-full -mr-40 -mt-40 blur-[120px] z-0"></div>
+        <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-botanist-light/10 rounded-full -ml-20 -mb-20 blur-[100px] z-0"></div>
       </section>
 
       {/* Daily Tip Section */}
@@ -143,7 +186,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onNavigate, isPremium }) => {
       </section>
 
       {/* Main Navigation Hub */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
         {sections.map((section, idx) => {
           const isLocked = section.isPro && !isPremium;
           return (

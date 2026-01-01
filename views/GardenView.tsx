@@ -5,11 +5,33 @@ import { PlantDetails, AppView } from '../types';
 interface GardenViewProps {
   garden: PlantDetails[];
   onRemove: (id: string) => void;
+  onUpdatePlant: (plant: PlantDetails) => void;
   onNavigate: (view: AppView) => void;
 }
 
-const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onNavigate }) => {
-  const [selectedPlant, setSelectedPlant] = useState<PlantDetails | null>(null);
+const AVAILABLE_ICONS = [
+  { id: 'leaf', path: 'M13 10V3L4 14h7v7l9-11h-7z', label: 'Leaf' },
+  { id: 'flower', path: 'M10 2a8 8 0 100 16 8 8 0 000-16z M10 14a4 4 0 110-8 4 4 0 010 8z', label: 'Flower' },
+  { id: 'tree', path: 'M12 2L3 12h3v8h12v-8h3L12 2z', label: 'Tree' },
+  { id: 'cactus', path: 'M12 2v20M8 8v8M16 8v8M5 10v4M19 10v4', label: 'Cactus' },
+  { id: 'sprout', path: 'M12 21V9m0 0a5 5 0 115-5m-5 5a5 5 0 10-5-5', label: 'Sprout' },
+  { id: 'pot', path: 'M6 3h12l-1 14H7L6 3z M6 3v1M18 3v1', label: 'Pot' },
+  { id: 'sun', path: 'M12 2v2m0 16v2m8-10h2M2 12h2m13.657-7.657l-1.414 1.414m-10.486 10.486l-1.414 1.414m12.314-1.414l-1.414-1.414M6.343 6.343l-1.414-1.414M12 7a5 5 0 100 10 5 5 0 000-10z', label: 'Sun' },
+  { id: 'water', path: 'M12 2.69l5.66 5.66a8 8 0 11-11.31 0z', label: 'Water' }
+];
+
+const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant, onNavigate }) => {
+  const [iconPickerId, setIconPickerId] = useState<string | null>(null);
+
+  const handleSelectIcon = (plant: PlantDetails, iconId: string) => {
+    onUpdatePlant({ ...plant, customIcon: iconId });
+    setIconPickerId(null);
+  };
+
+  const getIconPath = (iconId?: string) => {
+    const icon = AVAILABLE_ICONS.find(i => i.id === iconId);
+    return icon ? icon.path : 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13m18-13c-1.168-.776-2.754-1.253-4.5-1.253s-3.332.477-4.5 1.253v13c1.168-.776 2.754-1.253 4.5-1.253s3.332.477 4.5 1.253v-13z';
+  };
 
   if (garden.length === 0) {
     return (
@@ -53,6 +75,46 @@ const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onNavigate })
                 alt={plant.name} 
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
               />
+              
+              {/* Custom Icon Overlay */}
+              <div className="absolute top-4 left-4">
+                <button 
+                  onClick={() => setIconPickerId(iconPickerId === plant.id ? null : plant.id)}
+                  className="w-12 h-12 bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl flex items-center justify-center text-white hover:bg-botanist transition-all shadow-lg group/icon"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={getIconPath(plant.customIcon)} />
+                  </svg>
+                  <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1 opacity-0 group-hover/icon:opacity-100 transition-opacity">
+                    <svg className="w-2 h-2 text-botanist" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                  </div>
+                </button>
+
+                {/* Icon Picker Popover */}
+                {iconPickerId === plant.id && (
+                  <div className="absolute top-14 left-0 bg-white/95 backdrop-blur-xl border border-slate-200 p-4 rounded-3xl shadow-2xl z-50 flex flex-wrap gap-2 w-48 animate-in zoom-in-90 duration-200">
+                    <p className="w-full text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 px-1">Select Custom Icon</p>
+                    {AVAILABLE_ICONS.map(icon => (
+                      <button
+                        key={icon.id}
+                        onClick={() => handleSelectIcon(plant, icon.id)}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${plant.customIcon === icon.id ? 'bg-botanist text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={icon.path} />
+                        </svg>
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => handleSelectIcon(plant, '')}
+                      className="w-full mt-2 text-[10px] font-black uppercase text-slate-400 hover:text-red-500 py-2"
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="absolute top-4 right-4 flex space-x-2">
                 <button 
                   onClick={() => onRemove(plant.id)}

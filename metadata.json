@@ -1,5 +1,5 @@
 {
-  "name": "FloraGenius: AI Plant Expert",
+  "name": "Plant Dectective",
   "description": "A comprehensive plant identification and health diagnostic tool for gardening enthusiasts, powered by Gemini AI.",
   "requestFramePermissions": [
     "camera",

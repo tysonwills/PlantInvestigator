@@ -20,6 +20,13 @@ export interface Reminder {
   notes?: string;
 }
 
+export interface SimilarPlant {
+  name: string;
+  reason: string;
+  careMatch: boolean;
+  imageUrl?: string;
+}
+
 export interface PlantDetails {
   id: string;
   name: string;
@@ -38,8 +45,10 @@ export interface PlantDetails {
     fertilizer: string;
     homeRemedies: string[];
   };
+  similarPlants: SimilarPlant[];
   confidence: number;
   imageUrl?: string; // Store reference image from identification
+  customIcon?: string; // Identifier for user-selected icon
 }
 
 export interface Diagnosis {
@@ -53,7 +62,6 @@ export interface Diagnosis {
   timestamp: string;
 }
 
-// Added HistoryItem interface to support historical tracking in HistoryView
 export interface HistoryItem {
   id: string;
   type: 'identification' | 'diagnosis';

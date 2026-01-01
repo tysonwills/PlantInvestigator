@@ -42,14 +42,18 @@ const App: React.FC = () => {
 
   const handleDiagnosisResult = (diagnosis: Diagnosis, imageUrl: string) => {
     // Diagnostics are no longer saved to a history list, they are viewed once.
-    // In a full implementation, we might attach these to specific garden plants.
   };
 
   const addToGarden = (plant: PlantDetails) => {
-    // Check if plant already exists in garden (avoid duplicates of exact same scan)
     if (garden.some(p => p.id === plant.id)) return;
     
     const newGarden = [plant, ...garden];
+    setGarden(newGarden);
+    localStorage.setItem('flora_garden', JSON.stringify(newGarden));
+  };
+
+  const handleUpdatePlant = (updatedPlant: PlantDetails) => {
+    const newGarden = garden.map(p => p.id === updatedPlant.id ? updatedPlant : p);
     setGarden(newGarden);
     localStorage.setItem('flora_garden', JSON.stringify(newGarden));
   };
@@ -112,11 +116,13 @@ const App: React.FC = () => {
         if (!isPremium) return <UpgradeView isPremium={false} onUpgrade={handleUpgrade} />;
         return <DiagnosisView onResult={handleDiagnosisResult} />;
       case AppView.GARDEN:
-        return <GardenView garden={garden} onRemove={removeFromGarden} onNavigate={setCurrentView} />;
+        if (!isPremium) return <UpgradeView isPremium={false} onUpgrade={handleUpgrade} />;
+        return <GardenView garden={garden} onRemove={removeFromGarden} onUpdatePlant={handleUpdatePlant} onNavigate={setCurrentView} />;
       case AppView.MAP: 
         if (!isPremium) return <UpgradeView isPremium={false} onUpgrade={handleUpgrade} />;
         return <MapView />;
       case AppView.REMINDERS:
+        if (!isPremium) return <UpgradeView isPremium={false} onUpgrade={handleUpgrade} />;
         return <RemindersView reminders={reminders} garden={garden} onAdd={addReminder} onDelete={deleteReminder} />;
       case AppView.UPGRADE: return <UpgradeView isPremium={isPremium} onUpgrade={handleUpgrade} />;
       case AppView.AUTH: return <AuthView onAuth={handleAuthSuccess} />;
