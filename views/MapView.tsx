@@ -57,6 +57,11 @@ const MapView: React.FC = () => {
     fetchCenters();
   }, []);
 
+  // Helper to escape regex special characters
+  const escapeRegExp = (string: string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className="text-center mb-16">
@@ -112,8 +117,8 @@ const MapView: React.FC = () => {
                   <svg className="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </div>
                 <div>
-                  <h3 className="text-3xl font-black text-slate-800 tracking-tight">AI Curated Nurseries</h3>
-                  <p className="text-slate-400 font-bold uppercase tracking-widest text-[11px]">Real-time Grounded Analysis</p>
+                  <h3 className="text-3xl font-black text-slate-800 tracking-tight">Verified Botanical Experts</h3>
+                  <p className="text-slate-400 font-bold uppercase tracking-widest text-[11px]">Hand-picked Local Results</p>
                 </div>
               </div>
               <button 
@@ -124,43 +129,61 @@ const MapView: React.FC = () => {
               </button>
             </div>
 
-            <div className="prose prose-slate max-w-none">
-              <div className="whitespace-pre-wrap text-xl text-slate-600 font-semibold leading-relaxed mb-16 px-4 border-l-4 border-botanist/20">
-                {data.text}
-              </div>
-            </div>
+            {/* Top details section removed per request */}
 
-            {/* Citations/Links Section */}
+            {/* Citations/Links Section with Directions and Call emphasis */}
             {data.chunks.length > 0 && (
-              <div className="mt-16 pt-16 border-t border-slate-100">
-                <div className="flex items-center space-x-3 mb-10">
-                  <span className="w-2 h-2 bg-botanist rounded-full"></span>
-                  <h4 className="text-xl font-black text-slate-900 tracking-tight uppercase tracking-[0.1em]">Direct Navigation Links</h4>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {data.chunks.map((chunk: any, i: number) => {
-                    if (chunk.maps) {
-                      return (
-                        <a 
-                          key={i}
-                          href={chunk.maps.uri}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group bg-slate-50 hover:bg-botanist text-slate-800 hover:text-white border border-slate-100 rounded-[2.5rem] p-7 transition-all duration-500 flex items-center space-x-5 shadow-sm hover:shadow-xl hover:shadow-botanist/20 hover:-translate-y-1"
-                        >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {data.chunks.map((chunk: any, i: number) => {
+                  if (chunk.maps) {
+                    // Improved extraction with title escaping
+                    const escapedTitle = escapeRegExp(chunk.maps.title || '');
+                    const phoneMatch = data.text.match(new RegExp(`${escapedTitle}.*?([\\+]?[0-9\\s\\-\\(\\)]{8,})`, 'i'));
+                    const rawPhoneNumber = phoneMatch ? phoneMatch[1].trim() : null;
+                    
+                    // Sanitize phone number for the tel: URI (keep only digits and +)
+                    const sanitizedPhone = rawPhoneNumber ? rawPhoneNumber.replace(/[^\d+]/g, '') : null;
+
+                    return (
+                      <div 
+                        key={i}
+                        className="group bg-slate-50 border border-slate-100 rounded-[2.5rem] p-7 transition-all duration-500 shadow-sm hover:shadow-xl hover:shadow-botanist/20 flex flex-col h-full"
+                      >
+                        <div className="flex items-center space-x-5 mb-6">
                           <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-botanist shadow-sm group-hover:scale-110 transition-transform">
                             <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-black truncate tracking-tight text-lg">{chunk.maps.title || 'View Place'}</p>
-                            <p className="text-[10px] font-black uppercase opacity-70 tracking-widest mt-1 group-hover:opacity-100">Open Google Maps</p>
+                            <p className="font-black truncate tracking-tight text-lg text-slate-800">{chunk.maps.title || 'Botanical Spot'}</p>
+                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mt-1">Verified Expert</p>
                           </div>
-                        </a>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
+                        </div>
+                        
+                        <div className="flex flex-col gap-3 mt-auto">
+                          <a 
+                            href={chunk.maps.uri}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full bg-botanist text-white font-black text-xs uppercase tracking-[0.2em] py-4 rounded-2xl flex items-center justify-center hover:bg-botanist-dark transition-all shadow-lg shadow-botanist/10 active:scale-95"
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            Directions
+                          </a>
+                          
+                          <a 
+                            href={sanitizedPhone ? `tel:${sanitizedPhone}` : '#'}
+                            className={`w-full font-black text-xs uppercase tracking-[0.2em] py-4 rounded-2xl flex items-center justify-center border-2 transition-all active:scale-95 ${sanitizedPhone ? 'bg-white border-slate-200 text-slate-600 hover:border-botanist hover:text-botanist shadow-sm' : 'bg-slate-100 border-transparent text-slate-300 cursor-not-allowed opacity-50'}`}
+                            onClick={(e) => !sanitizedPhone && e.preventDefault()}
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                            {sanitizedPhone ? 'Call Center' : 'Phone Unavailable'}
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
               </div>
             )}
           </div>

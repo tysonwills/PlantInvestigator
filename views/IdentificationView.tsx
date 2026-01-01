@@ -95,6 +95,26 @@ const IdentificationView: React.FC<IdentificationViewProps> = ({ onResult, onAdd
     }
   };
 
+  const handleShare = async () => {
+    if (!result) return;
+    const shareData = {
+      title: `Check out this ${result.name}!`,
+      text: `I just discovered a ${result.name} (${result.botanicalName}) using FloraGenius. It prefers ${result.careGuide.light.toLowerCase()} and ${result.careGuide.watering.toLowerCase()}!`,
+      url: window.location.origin
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(`${shareData.title} ${shareData.text}`);
+        alert('Plant details copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
   const handleCompareRelative = async (plantName: string) => {
     setCompareLoading(plantName);
     try {
@@ -195,6 +215,7 @@ const IdentificationView: React.FC<IdentificationViewProps> = ({ onResult, onAdd
   };
 
   if (result) {
+    const displayImageUrl = result.imageUrl || getPlaceholder(result.name);
     const careItems = [
       { label: 'Hydration', value: result.careGuide.watering, icon: 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7', color: 'text-blue-500', bg: 'bg-blue-50', badge: getBadge(result.careGuide.watering, 'water') },
       { label: 'Luminosity', value: result.careGuide.light, icon: 'M12 3v1m0 16v1m9-9h-1M4 9h-1', color: 'text-amber-500', bg: 'bg-amber-50', badge: getBadge(result.careGuide.light, 'light') },
@@ -227,12 +248,24 @@ const IdentificationView: React.FC<IdentificationViewProps> = ({ onResult, onAdd
             <svg className="w-6 h-6 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             <span className="text-[15px]">Back to Scanner</span>
           </button>
-          <button 
-            onClick={() => onAddReminder(result.name, result.careGuide.watering)}
-            className="bg-slate-900 text-white font-black px-8 py-3 rounded-full shadow-lg hover:bg-black transition-all active:scale-95 text-sm uppercase tracking-widest"
-          >
-            Add Care Task
-          </button>
+          
+          <div className="flex items-center space-x-3 w-full sm:w-auto">
+            <button 
+              onClick={handleShare}
+              className="flex-1 sm:flex-none bg-white border-2 border-slate-200 text-slate-600 font-black px-6 py-3 rounded-full shadow-sm hover:border-botanist hover:text-botanist transition-all active:scale-95 text-sm uppercase tracking-widest flex items-center justify-center"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              Share
+            </button>
+            <button 
+              onClick={() => onAddReminder(result.name, result.careGuide.watering)}
+              className="flex-1 sm:flex-none bg-slate-900 text-white font-black px-8 py-3 rounded-full shadow-lg hover:bg-black transition-all active:scale-95 text-sm uppercase tracking-widest"
+            >
+              Add Care Task
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -245,30 +278,18 @@ const IdentificationView: React.FC<IdentificationViewProps> = ({ onResult, onAdd
               onTouchStart={handleMouseDown}
               onTouchMove={handleMouseMove}
             >
-              {capturedImage ? (
-                <div className="w-full h-full transition-transform duration-75 cursor-move" style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, transformOrigin: '0 0' }}>
-                  <img src={capturedImage} alt="Captured Plant" className="w-full h-full object-cover select-none pointer-events-none" />
-                </div>
-              ) : (
-                <div className="w-full h-full relative overflow-hidden flex flex-col items-center justify-center">
-                  <img src={getPlaceholder(result.name)} alt="Profile Background" className="absolute inset-0 w-full h-full object-cover blur-md opacity-30 scale-110" />
-                  <div className="relative z-10 text-center px-12">
-                    <div className="w-24 h-24 bg-white/60 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl border border-white/50">
-                      <svg className="w-12 h-12 text-botanist" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13m18-13c-1.168-.776-2.754-1.253-4.5-1.253s-3.332.477-4.5 1.253v13c1.168-.776 2.754-1.253 4.5-1.253s3.332.477 4.5 1.253v-13z" /></svg>
-                    </div>
-                    <h4 className="text-2xl font-black text-slate-800 mb-2">Library Reference</h4>
-                    <p className="font-bold text-slate-500 leading-relaxed">Botanical data curated from our expert archives for {result.name}.</p>
-                  </div>
-                </div>
-              )}
-              {capturedImage && (
-                <div className="absolute bottom-6 right-6 flex flex-col space-y-3">
-                  <button onClick={handleZoomIn} className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-slate-800 shadow-xl border border-white/50 hover:bg-white transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg></button>
-                  <button onClick={handleZoomOut} className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-slate-800 shadow-xl border border-white/50 hover:bg-white transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M20 12H4" /></svg></button>
-                  <button onClick={handleResetZoom} className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-slate-800 shadow-xl border border-white/50 hover:bg-white transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg></button>
-                </div>
-              )}
-              {result.isToxic && <div className="absolute top-6 left-6 bg-red-500/90 backdrop-blur-md text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg border border-white/20">Toxic to Pets</div>}
+              <div className="w-full h-full transition-transform duration-75 cursor-move" style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, transformOrigin: '0 0' }}>
+                <img src={displayImageUrl} alt="Botanical Record" className="w-full h-full object-cover select-none pointer-events-none" />
+              </div>
+              
+              <div className="absolute bottom-6 right-6 flex flex-col space-y-3">
+                <button onClick={handleZoomIn} className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-slate-800 shadow-xl border border-white/50 hover:bg-white transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg></button>
+                <button onClick={handleZoomOut} className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-slate-800 shadow-xl border border-white/50 hover:bg-white transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M20 12H4" /></svg></button>
+                <button onClick={handleResetZoom} className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-slate-800 shadow-xl border border-white/50 hover:bg-white transition-colors"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg></button>
+              </div>
+              
+              <div className="absolute top-6 left-6 bg-botanist/90 backdrop-blur-md text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg border border-white/20">Botanical Record</div>
+              {result.isToxic && <div className="absolute top-16 left-6 bg-red-500/90 backdrop-blur-md text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg border border-white/20">Toxic to Pets</div>}
               {result.isWeed && <div className="absolute top-6 right-6 bg-amber-500/90 backdrop-blur-md text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg border border-white/20">Weed Species</div>}
             </div>
             <div className="bg-white p-10 rounded-[3rem] border border-slate-50 shadow-sm">

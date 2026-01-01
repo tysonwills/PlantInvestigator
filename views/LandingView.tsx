@@ -8,29 +8,35 @@ interface LandingViewProps {
   isPremium: boolean;
 }
 
-// Curated list of high-quality, "friendly" plant images from Unsplash
+// Curated list of high-quality, muted plant-tending videos from Pexels/CDN
+const FRIENDLY_PLANT_VIDEOS = [
+  "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-woman-planting-a-plant-in-a-pot-34533-large.mp4",
+  "https://assets.mixkit.co/videos/preview/mixkit-woman-watering-plants-with-a-watering-can-34537-large.mp4",
+  "https://assets.mixkit.co/videos/preview/mixkit-close-up-of-hands-transplanting-a-plant-34534-large.mp4",
+  "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-person-pruning-a-plant-with-scissors-34531-large.mp4",
+  "https://assets.mixkit.co/videos/preview/mixkit-woman-spraying-water-on-the-leaves-of-a-plant-34539-large.mp4",
+  "https://assets.mixkit.co/videos/preview/mixkit-woman-cutting-a-leaf-from-a-potted-plant-34532-large.mp4"
+];
+
+// Fallback images in case video fails or on slow connections
 const FRIENDLY_PLANT_IMAGES = [
-  "https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=1200&auto=format&fit=crop", // Fiddle Leaf Fig
-  "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?q=80&w=1200&auto=format&fit=crop", // Monstera
-  "https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?q=80&w=1200&auto=format&fit=crop", // Snake Plant
-  "https://images.unsplash.com/photo-1631510444342-a79051066042?q=80&w=1200&auto=format&fit=crop", // Pothos
-  "https://images.unsplash.com/photo-1512428813834-c702c7702b78?q=80&w=1200&auto=format&fit=crop", // Potted Succulent
-  "https://images.unsplash.com/photo-1614594805323-e5a73277e499?q=80&w=1200&auto=format&fit=crop", // Chinese Money Plant
-  "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?q=80&w=1200&auto=format&fit=crop", // Calathea
-  "https://images.unsplash.com/photo-1525498128493-380d1990a112?q=80&w=1200&auto=format&fit=crop", // Tropical Leaves
-  "https://images.unsplash.com/photo-1516706562550-01dc7c50406d?q=80&w=1200&auto=format&fit=crop", // String of Pearls
-  "https://images.unsplash.com/photo-1592150621744-aca64f48394a?q=80&w=1200&auto=format&fit=crop"  // Bird of Paradise
+  "https://images.unsplash.com/photo-1545239351-ef35f43d514b?q=80&w=1200&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?q=80&w=1200&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1520302630591-fd1c66ed11ef?q=80&w=1200&auto=format&fit=crop"
 ];
 
 const LandingView: React.FC<LandingViewProps> = ({ onNavigate, isPremium }) => {
   const [dailyTip, setDailyTip] = useState<{ title: string; tip: string } | null>(null);
   const [tipLoading, setTipLoading] = useState(true);
+  const [heroVideo, setHeroVideo] = useState(FRIENDLY_PLANT_VIDEOS[0]);
   const [heroImage, setHeroImage] = useState(FRIENDLY_PLANT_IMAGES[0]);
 
   useEffect(() => {
-    // Select a unique random plant image on every component mount (app start/navigation)
-    const randomIndex = Math.floor(Math.random() * FRIENDLY_PLANT_IMAGES.length);
-    setHeroImage(FRIENDLY_PLANT_IMAGES[randomIndex]);
+    // Select a unique random plant video and fallback image on every mount
+    const randomVideoIndex = Math.floor(Math.random() * FRIENDLY_PLANT_VIDEOS.length);
+    const randomImageIndex = Math.floor(Math.random() * FRIENDLY_PLANT_IMAGES.length);
+    setHeroVideo(FRIENDLY_PLANT_VIDEOS[randomVideoIndex]);
+    setHeroImage(FRIENDLY_PLANT_IMAGES[randomImageIndex]);
 
     async function fetchTip() {
       try {
@@ -120,69 +126,40 @@ const LandingView: React.FC<LandingViewProps> = ({ onNavigate, isPremium }) => {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-      {/* Restyled Hero Welcome Section */}
-      <section className="relative overflow-hidden bg-botanist rounded-[3.5rem] p-10 md:p-16 text-white shadow-2xl shadow-botanist/20 group min-h-[400px] flex items-center">
+      {/* Immersive Hero Welcome Section with Random Background Video */}
+      <section className="relative overflow-hidden bg-smoke rounded-[3.5rem] p-10 md:p-16 text-white shadow-2xl group min-h-[450px] flex items-center">
+        {/* Full-bleed Background Video Container */}
+        <div className="absolute inset-0 select-none pointer-events-none z-0">
+          <video 
+            key={heroVideo}
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+            poster={heroImage}
+            className="w-full h-full object-cover transition-opacity duration-1000 opacity-80 scale-105 group-hover:scale-110 transition-transform duration-[3s]"
+          >
+            <source src={heroVideo} type="video/mp4" />
+          </video>
+          {/* Subtle overlay for text readability without washing out the video */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/40 to-transparent"></div>
+        </div>
+
         <div className="relative z-20 max-w-2xl">
-          <h2 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight text-white drop-shadow-sm">
+          <h2 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight tracking-tight text-white drop-shadow-2xl text-shadow-lg">
             Hello, <br /> Gardener!
           </h2>
-          <p className="text-white/95 text-xl md:text-2xl mb-10 font-medium leading-relaxed max-w-md">
+          <p className="text-white/95 text-xl md:text-2xl mb-10 font-medium leading-relaxed max-w-md drop-shadow-xl">
             Everything you need to keep your urban oasis flourishing is right here at your fingertips.
           </p>
-          <div className="flex items-center space-x-3 text-sm bg-white/20 backdrop-blur-xl px-6 py-3 rounded-full w-fit border border-white/30 shadow-lg">
-            <span className="w-2.5 h-2.5 bg-green-300 rounded-full animate-pulse shadow-[0_0_10px_rgba(110,231,183,1)]"></span>
+          <div className="flex items-center space-x-3 text-sm bg-white/20 backdrop-blur-3xl px-6 py-3 rounded-full w-fit border border-white/30 shadow-2xl transition-all hover:bg-white/30">
+            <span className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(74,222,128,1)]"></span>
             <span className="font-black uppercase tracking-[0.2em] text-[10px]">FloraGenius Hub Active</span>
           </div>
         </div>
 
-        {/* Dynamic Botanical Accent - Randomly loaded plant image */}
-        <div className="absolute right-0 top-0 bottom-0 w-2/3 md:w-1/2 select-none pointer-events-none transition-all duration-1000 group-hover:scale-105 z-10">
-          <div className="relative h-full w-full">
-            <img 
-              src={heroImage} 
-              alt="Random Botanical Friend" 
-              className="w-full h-full object-cover object-center md:object-right opacity-40 md:opacity-90 mask-fade-left"
-              style={{
-                maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)',
-                WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%)'
-              }}
-            />
-            {/* Soft Overlay for text readability on mobile */}
-            <div className="absolute inset-0 bg-gradient-to-r from-botanist via-botanist/40 to-transparent z-0 md:hidden"></div>
-          </div>
-        </div>
-
-        {/* Background Decorative Blurs */}
-        <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-white/10 rounded-full -mr-40 -mt-40 blur-[120px] z-0"></div>
-        <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-botanist-light/10 rounded-full -ml-20 -mb-20 blur-[100px] z-0"></div>
-      </section>
-
-      {/* Daily Tip Section */}
-      <section className="bg-white border border-slate-100 rounded-[3rem] p-8 md:p-12 shadow-sm relative overflow-hidden group">
-        <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
-          <div className="w-20 h-20 bg-amber-50 rounded-[2rem] flex items-center justify-center text-amber-500 flex-shrink-0 shadow-inner group-hover:rotate-12 transition-transform duration-500">
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-          </div>
-          <div className="flex-1 text-center md:text-left">
-            {tipLoading ? (
-              <div className="animate-pulse space-y-4">
-                <div className="h-4 bg-slate-100 rounded w-1/4"></div>
-                <div className="h-4 bg-slate-100 rounded w-3/4"></div>
-              </div>
-            ) : dailyTip ? (
-              <>
-                <h4 className="text-[11px] font-black text-amber-600 uppercase tracking-[0.3em] mb-3">Plant Care Tip of the Day</h4>
-                <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">{dailyTip.title}</h3>
-                <p className="text-slate-500 text-lg font-medium leading-relaxed max-w-2xl">{dailyTip.tip}</p>
-              </>
-            ) : (
-              <p className="text-slate-400 font-bold italic">Checking our botanical library for wisdom...</p>
-            )}
-          </div>
-        </div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50/50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-amber-100 transition-colors"></div>
+        {/* Floating Decorative Accents */}
+        <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-botanist/10 rounded-full -mr-40 -mt-40 blur-[120px] z-10 pointer-events-none"></div>
       </section>
 
       {/* Main Navigation Hub */}
@@ -257,15 +234,34 @@ const LandingView: React.FC<LandingViewProps> = ({ onNavigate, isPremium }) => {
             <p className="text-xl font-extrabold text-slate-800 tracking-tight">Real-time AI</p>
           </div>
         </div>
+      </section>
 
-        {/* Subtle decorative plant accent */}
-        <div className="absolute left-0 bottom-0 w-32 h-32 opacity-10 select-none pointer-events-none">
-          <img 
-            src="https://images.unsplash.com/photo-1520302630591-fd1c66ed11ef?q=80&w=400&auto=format&fit=crop" 
-            alt="Leaf accent" 
-            className="w-full h-full object-cover"
-          />
+      {/* Daily Tip Section - Moved to bottom */}
+      <section className="bg-white border border-slate-100 rounded-[3rem] p-8 md:p-12 shadow-sm relative overflow-hidden group">
+        <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+          <div className="w-20 h-20 bg-amber-50 rounded-[2rem] flex items-center justify-center text-amber-500 flex-shrink-0 shadow-inner group-hover:rotate-12 transition-transform duration-500">
+            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <div className="flex-1 text-center md:text-left">
+            {tipLoading ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-4 bg-slate-100 rounded w-1/4"></div>
+                <div className="h-4 bg-slate-100 rounded w-3/4"></div>
+              </div>
+            ) : dailyTip ? (
+              <>
+                <h4 className="text-[11px] font-black text-amber-600 uppercase tracking-[0.3em] mb-3">Plant Care Tip of the Day</h4>
+                <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">{dailyTip.title}</h3>
+                <p className="text-slate-500 text-lg font-medium leading-relaxed max-w-2xl">{dailyTip.tip}</p>
+              </>
+            ) : (
+              <p className="text-slate-400 font-bold italic">Checking our botanical library for wisdom...</p>
+            )}
+          </div>
         </div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50/50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-amber-100 transition-colors"></div>
       </section>
     </div>
   );

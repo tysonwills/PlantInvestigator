@@ -16,6 +16,7 @@ const PLANT_ID_SCHEMA = {
     toxicityDetails: { type: Type.STRING, description: "Details on why it is toxic" },
     isWeed: { type: Type.BOOLEAN, description: "True if commonly considered a weed" },
     confidence: { type: Type.NUMBER, description: "0-1 confidence score" },
+    imageUrl: { type: Type.STRING, description: "A high-quality Unsplash image URL (from images.unsplash.com) representing a perfect botanical specimen of this exact species." },
     careGuide: {
       type: Type.OBJECT,
       properties: {
@@ -47,7 +48,7 @@ const PLANT_ID_SCHEMA = {
       description: "List of 3 similar-looking or similar-care plants"
     }
   },
-  required: ["name", "botanicalName", "family", "description", "origin", "isToxic", "toxicityDetails", "isWeed", "confidence", "careGuide", "similarPlants"]
+  required: ["name", "botanicalName", "family", "description", "origin", "isToxic", "toxicityDetails", "isWeed", "confidence", "imageUrl", "careGuide", "similarPlants"]
 };
 
 const DIAGNOSIS_SCHEMA = {
@@ -69,7 +70,7 @@ export async function identifyPlant(base64Image: string): Promise<PlantDetails> 
     contents: [
       {
         parts: [
-          { text: "Identify this plant accurately. Provide detailed care instructions and check for toxicity/weed status. Also suggest 3 similar plants with their representative Unsplash image URLs." },
+          { text: "Identify this plant accurately. Provide detailed care instructions and check for toxicity/weed status. Also fetch a high-quality botanical image URL from Unsplash and suggest 3 similar plants with their representative Unsplash image URLs." },
           { inlineData: { mimeType: "image/jpeg", data: base64Image } }
         ]
       }
@@ -87,7 +88,7 @@ export async function identifyPlant(base64Image: string): Promise<PlantDetails> 
 export async function getPlantDetailsByName(name: string): Promise<PlantDetails> {
   const response: GenerateContentResponse = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
-    contents: `Provide detailed botanical information and care instructions for the plant: ${name}. Check for toxicity/weed status and suggest similar plants with their representative Unsplash image URLs.`,
+    contents: `Provide detailed botanical information and care instructions for the plant: ${name}. Fetch a perfect high-quality botanical image URL from Unsplash. Check for toxicity/weed status and suggest similar plants with their representative Unsplash image URLs.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: PLANT_ID_SCHEMA
@@ -122,7 +123,7 @@ export async function diagnosePlant(base64Image: string): Promise<Diagnosis> {
 export async function getNearbyGardenCenters(lat: number, lng: number) {
   const response: GenerateContentResponse = await ai.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: `Find the best garden centers, plant nurseries, and botanical experts near my current location (lat: ${lat}, lng: ${lng}). Provide their names, brief descriptions of what they specialize in, and their addresses.`,
+    contents: `Find the best garden centers, plant nurseries, and botanical experts near my current location (lat: ${lat}, lng: ${lng}). For each result found, find its telephone number. Ensure the results are hyper-local to these coordinates.`,
     config: {
       tools: [{ googleMaps: {} }, { googleSearch: {} }],
       toolConfig: {

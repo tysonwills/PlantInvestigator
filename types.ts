@@ -7,7 +7,8 @@ export enum AppView {
   AUTH = 'AUTH',
   MAP = 'MAP',
   REMINDERS = 'REMINDERS',
-  GARDEN = 'GARDEN'
+  GARDEN = 'GARDEN',
+  ACCOUNT = 'ACCOUNT'
 }
 
 export interface Reminder {

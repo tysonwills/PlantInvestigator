@@ -12,6 +12,7 @@ import AuthView from './views/AuthView';
 import MapView from './views/MapView';
 import RemindersView from './views/RemindersView';
 import GardenView from './views/GardenView';
+import AccountView from './views/AccountView';
 import NotificationOverlay from './components/NotificationOverlay';
 import { authService } from './services/authService';
 
@@ -125,6 +126,9 @@ const App: React.FC = () => {
         if (!isPremium) return <UpgradeView isPremium={false} onUpgrade={handleUpgrade} />;
         return <RemindersView reminders={reminders} garden={garden} onAdd={addReminder} onDelete={deleteReminder} />;
       case AppView.UPGRADE: return <UpgradeView isPremium={isPremium} onUpgrade={handleUpgrade} />;
+      case AppView.ACCOUNT: 
+        if (!user) return null;
+        return <AccountView user={user} gardenCount={garden.length} reminderCount={reminders.length} onLogout={handleLogout} onNavigate={setCurrentView} />;
       case AppView.AUTH: return <AuthView onAuth={handleAuthSuccess} />;
       default: return <LandingView onNavigate={setCurrentView} isPremium={isPremium} />;
     }
