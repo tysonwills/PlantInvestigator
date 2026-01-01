@@ -31,6 +31,7 @@ const MapView: React.FC = () => {
             position.coords.latitude,
             position.coords.longitude
           );
+          // result is now guaranteed to be the correct object type as catch block throws via handleApiError
           setData(result);
         } catch (err) {
           setError("Failed to fetch nearby centers. Our AI is having trouble connecting to map data.");

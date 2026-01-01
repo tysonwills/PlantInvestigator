@@ -28,6 +28,50 @@ const DiagnosisView: React.FC<DiagnosisViewProps> = ({ onResult }) => {
     }
   };
 
+  const getRemedyIcon = (remedy: string) => {
+    const r = remedy.toLowerCase();
+    if (r.includes('soap') || r.includes('dish') || r.includes('detergent')) {
+      return { 
+        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v3a3 3 0 01-3 3z" /></svg>,
+        color: 'text-cyan-500',
+        bg: 'bg-cyan-50'
+      };
+    }
+    if (r.includes('oil') || r.includes('neem')) {
+      return { 
+        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.673.337a4 4 0 01-2.586.344l-2.096-.419a1 1 0 01-.801-1.223l.112-.556a3 3 0 01.18-.545l.135-.303a1 1 0 00-.13-.984l-1.033-1.378a1 1 0 00-1.428-.182l-.444.333a1 1 0 01-1.385-.183A5 5 0 017 4.5V4" /></svg>,
+        color: 'text-emerald-600',
+        bg: 'bg-emerald-50'
+      };
+    }
+    if (r.includes('cinnamon') || r.includes('spice')) {
+      return { 
+        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 21a9.003 9.003 0 008.354-5.646z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21" /></svg>,
+        color: 'text-orange-800',
+        bg: 'bg-orange-50'
+      };
+    }
+    if (r.includes('vinegar') || r.includes('acetic')) {
+      return { 
+        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.673.337a4 4 0 01-2.586.344" /></svg>,
+        color: 'text-amber-600',
+        bg: 'bg-amber-50'
+      };
+    }
+    if (r.includes('soda') || r.includes('milk') || r.includes('baking')) {
+      return { 
+        icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
+        color: 'text-slate-500',
+        bg: 'bg-slate-50'
+      };
+    }
+    return { 
+      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z" /></svg>,
+      color: 'text-botanist',
+      bg: 'bg-botanist/5'
+    };
+  };
+
   if (result && capturedImage) {
     const severityColors = {
       low: 'bg-botanist/10 text-botanist border-botanist/20',
@@ -81,29 +125,6 @@ const DiagnosisView: React.FC<DiagnosisViewProps> = ({ onResult }) => {
                 </div>
               </div>
             </div>
-
-            {result.groundingSources && result.groundingSources.length > 0 && (
-              <div className="bg-white p-10 rounded-[3rem] border border-slate-50 shadow-sm">
-                <h4 className="text-[11px] font-black text-blue-500 uppercase tracking-[0.3em] mb-6 flex items-center">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                  Horticultural Evidence
-                </h4>
-                <div className="space-y-3">
-                  {result.groundingSources.map((source, i) => (
-                    <a 
-                      key={i} 
-                      href={source.uri} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-500 hover:bg-blue-50 transition-all group"
-                    >
-                      <span className="text-sm font-bold text-slate-700 truncate mr-4">{source.title}</span>
-                      <svg className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="space-y-10">
@@ -126,6 +147,31 @@ const DiagnosisView: React.FC<DiagnosisViewProps> = ({ onResult }) => {
               </div>
               <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-[80px] -mr-40 -mt-40"></div>
             </div>
+
+            {/* Natural Home Remedies Section */}
+            {result.homeRemedies && result.homeRemedies.length > 0 && (
+              <div className="bg-white p-12 rounded-[3.5rem] border border-slate-50 shadow-xl">
+                <h3 className="text-2xl font-extrabold text-slate-900 mb-8 flex items-center tracking-tight">
+                  <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mr-6 shadow-inner">
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.673.337a4 4 0 01-2.586.344" /></svg>
+                  </div>
+                  Botanical Home Remedies
+                </h3>
+                <div className="space-y-4">
+                  {result.homeRemedies.map((remedy, idx) => {
+                    const style = getRemedyIcon(remedy);
+                    return (
+                      <div key={idx} className={`flex items-start p-5 rounded-3xl border border-slate-100 ${style.bg} hover:shadow-md transition-all group`}>
+                        <div className={`w-10 h-10 bg-white rounded-xl flex items-center justify-center ${style.color} shadow-sm mr-4 flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                          {style.icon}
+                        </div>
+                        <p className="text-slate-700 font-bold text-sm leading-relaxed pt-1">{remedy}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="bg-white p-12 rounded-[3.5rem] border border-slate-50 shadow-xl">
               <h3 className="text-2xl font-extrabold text-slate-900 mb-10 flex items-center tracking-tight">

@@ -66,6 +66,7 @@ export interface Diagnosis {
   causes: string[];
   treatment: string[];
   prevention: string[];
+  homeRemedies: string[];
   timestamp: string;
   groundingSources?: GroundingSource[];
 }

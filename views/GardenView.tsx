@@ -7,6 +7,7 @@ interface GardenViewProps {
   onRemove: (id: string) => void;
   onUpdatePlant: (plant: PlantDetails) => void;
   onNavigate: (view: AppView) => void;
+  onViewDetails: (plant: PlantDetails) => void;
 }
 
 const AVAILABLE_ICONS = [
@@ -20,10 +21,11 @@ const AVAILABLE_ICONS = [
   { id: 'water', path: 'M12 2.69l5.66 5.66a8 8 0 11-11.31 0z', label: 'Water' }
 ];
 
-const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant, onNavigate }) => {
+const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant, onNavigate, onViewDetails }) => {
   const [iconPickerId, setIconPickerId] = useState<string | null>(null);
 
-  const handleSelectIcon = (plant: PlantDetails, iconId: string) => {
+  const handleSelectIcon = (e: React.MouseEvent, plant: PlantDetails, iconId: string) => {
+    e.stopPropagation(); // Prevent card click
     onUpdatePlant({ ...plant, customIcon: iconId });
     setIconPickerId(null);
   };
@@ -67,7 +69,8 @@ const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant
         {garden.map((plant) => (
           <div 
             key={plant.id} 
-            className="group relative bg-white rounded-[3rem] overflow-hidden shadow-sm border border-slate-100/50 transition-all duration-500 hover:shadow-2xl hover:shadow-botanist/10 hover:-translate-y-2"
+            onClick={() => onViewDetails(plant)}
+            className="group relative bg-white rounded-[3rem] overflow-hidden shadow-sm border border-slate-100/50 transition-all duration-500 hover:shadow-2xl hover:shadow-botanist/10 hover:-translate-y-2 cursor-pointer"
           >
             <div className="relative h-64 overflow-hidden">
               <img 
@@ -79,7 +82,10 @@ const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant
               {/* Custom Icon Overlay */}
               <div className="absolute top-4 left-4">
                 <button 
-                  onClick={() => setIconPickerId(iconPickerId === plant.id ? null : plant.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIconPickerId(iconPickerId === plant.id ? null : plant.id);
+                  }}
                   className="w-12 h-12 bg-white/30 backdrop-blur-xl border border-white/40 rounded-2xl flex items-center justify-center text-white hover:bg-botanist transition-all shadow-lg group/icon"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,7 +103,7 @@ const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant
                     {AVAILABLE_ICONS.map(icon => (
                       <button
                         key={icon.id}
-                        onClick={() => handleSelectIcon(plant, icon.id)}
+                        onClick={(e) => handleSelectIcon(e, plant, icon.id)}
                         className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${plant.customIcon === icon.id ? 'bg-botanist text-white' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,7 +112,7 @@ const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant
                       </button>
                     ))}
                     <button
-                      onClick={() => handleSelectIcon(plant, '')}
+                      onClick={(e) => handleSelectIcon(e, plant, '')}
                       className="w-full mt-2 text-[10px] font-black uppercase text-slate-400 hover:text-red-500 py-2"
                     >
                       Clear Selection
@@ -117,7 +123,10 @@ const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant
 
               <div className="absolute top-4 right-4 flex space-x-2">
                 <button 
-                  onClick={() => onRemove(plant.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove(plant.id);
+                  }}
                   className="p-2 bg-white/20 backdrop-blur-md rounded-xl text-white hover:bg-red-500 transition-colors border border-white/20"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -143,13 +152,19 @@ const GardenView: React.FC<GardenViewProps> = ({ garden, onRemove, onUpdatePlant
               
               <div className="flex gap-4">
                 <button 
-                  onClick={() => onNavigate(AppView.REMINDERS)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigate(AppView.REMINDERS);
+                  }}
                   className="flex-1 bg-slate-900 text-white px-4 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-botanist transition-colors"
                 >
                   Schedule Care
                 </button>
                 <button 
-                  onClick={() => onNavigate(AppView.DIAGNOSE)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigate(AppView.DIAGNOSE);
+                  }}
                   className="flex-1 bg-botanist/10 text-botanist px-4 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-botanist hover:text-white transition-colors border border-botanist/5"
                 >
                   Diagnose

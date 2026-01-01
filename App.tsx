@@ -23,6 +23,8 @@ const App: React.FC = () => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [hasDismissedNotification, setHasDismissedNotification] = useState(false);
+  const [isApiKeyMissing, setIsApiKeyMissing] = useState(false);
+  const [selectedPlant, setSelectedPlant] = useState<PlantDetails | null>(null);
 
   // Initialize Auth, Garden & Reminders
   useEffect(() => {
@@ -34,15 +36,30 @@ const App: React.FC = () => {
 
     const savedReminders = localStorage.getItem('flora_reminders');
     if (savedReminders) setReminders(JSON.parse(savedReminders));
+
+    // Check for API key selection if environment requires it
+    const checkApiKey = async () => {
+      if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
+        const hasKey = await window.aistudio.hasSelectedApiKey();
+        setIsApiKeyMissing(!hasKey);
+      }
+    };
+    checkApiKey();
   }, []);
 
+  const handleOpenApiKeyDialog = async () => {
+    if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
+      await window.aistudio.openSelectKey();
+      setIsApiKeyMissing(false);
+    }
+  };
+
   const handleIdentificationResult = (plant: PlantDetails, imageUrl: string) => {
-    // Add to garden collection
     addToGarden({ ...plant, imageUrl });
   };
 
   const handleDiagnosisResult = (diagnosis: Diagnosis, imageUrl: string) => {
-    // Diagnostics are no longer saved to a history list, they are viewed once.
+    // Single view diagnosis
   };
 
   const addToGarden = (plant: PlantDetails) => {
@@ -96,6 +113,18 @@ const App: React.FC = () => {
     }
   };
 
+  const handleNavigate = (view: AppView) => {
+    if (view !== AppView.IDENTIFY) {
+      setSelectedPlant(null);
+    }
+    setCurrentView(view);
+  };
+
+  const handleViewPlantDetails = (plant: PlantDetails) => {
+    setSelectedPlant(plant);
+    setCurrentView(AppView.IDENTIFY);
+  };
+
   const renderView = () => {
     if (!user?.isAuthenticated && currentView !== AppView.AUTH) {
       return <AuthView onAuth={handleAuthSuccess} />;
@@ -104,13 +133,16 @@ const App: React.FC = () => {
     const isPremium = user?.isPremium || false;
 
     switch (currentView) {
-      case AppView.LANDING: return <LandingView onNavigate={setCurrentView} isPremium={isPremium} />;
+      case AppView.LANDING: return <LandingView onNavigate={handleNavigate} isPremium={isPremium} />;
       case AppView.IDENTIFY: return (
         <IdentificationView 
+          key={selectedPlant?.id || 'new-scan'}
+          initialPlant={selectedPlant || undefined}
           onResult={handleIdentificationResult} 
           onAddReminder={(name, task) => {
-            setCurrentView(AppView.REMINDERS);
+            handleNavigate(AppView.REMINDERS);
           }}
+          onNavigate={handleNavigate}
         />
       );
       case AppView.DIAGNOSE: 
@@ -118,7 +150,13 @@ const App: React.FC = () => {
         return <DiagnosisView onResult={handleDiagnosisResult} />;
       case AppView.GARDEN:
         if (!isPremium) return <UpgradeView isPremium={false} onUpgrade={handleUpgrade} />;
-        return <GardenView garden={garden} onRemove={removeFromGarden} onUpdatePlant={handleUpdatePlant} onNavigate={setCurrentView} />;
+        return <GardenView 
+          garden={garden} 
+          onRemove={removeFromGarden} 
+          onUpdatePlant={handleUpdatePlant} 
+          onNavigate={handleNavigate}
+          onViewDetails={handleViewPlantDetails}
+        />;
       case AppView.MAP: 
         if (!isPremium) return <UpgradeView isPremium={false} onUpgrade={handleUpgrade} />;
         return <MapView />;
@@ -128,9 +166,9 @@ const App: React.FC = () => {
       case AppView.UPGRADE: return <UpgradeView isPremium={isPremium} onUpgrade={handleUpgrade} />;
       case AppView.ACCOUNT: 
         if (!user) return null;
-        return <AccountView user={user} gardenCount={garden.length} reminderCount={reminders.length} onLogout={handleLogout} onNavigate={setCurrentView} />;
+        return <AccountView user={user} gardenCount={garden.length} reminderCount={reminders.length} onLogout={handleLogout} onNavigate={handleNavigate} />;
       case AppView.AUTH: return <AuthView onAuth={handleAuthSuccess} />;
-      default: return <LandingView onNavigate={setCurrentView} isPremium={isPremium} />;
+      default: return <LandingView onNavigate={handleNavigate} isPremium={isPremium} />;
     }
   };
 
@@ -142,15 +180,46 @@ const App: React.FC = () => {
           onDismiss={() => setHasDismissedNotification(true)}
           onViewReminders={() => {
             setHasDismissedNotification(true);
-            setCurrentView(AppView.REMINDERS);
+            handleNavigate(AppView.REMINDERS);
           }}
         />
+      )}
+
+      {/* API Key Modal Overlay */}
+      {isApiKeyMissing && user?.isAuthenticated && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[3rem] p-10 max-w-lg w-full text-center shadow-2xl border border-white/20 scale-in duration-300">
+            <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center text-amber-500 mx-auto mb-8 shadow-inner">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            </div>
+            <h3 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">AI Access Required</h3>
+            <p className="text-slate-500 font-semibold mb-8 leading-relaxed">To provide advanced botanical identification and diagnostics, you must configure your Gemini API credentials.</p>
+            <div className="space-y-4">
+              <button 
+                onClick={handleOpenApiKeyDialog}
+                className="w-full bg-botanist text-white font-black py-5 rounded-full shadow-xl shadow-botanist/20 hover:bg-botanist-dark transition-all active:scale-95 text-lg"
+              >
+                Configure API Key
+              </button>
+              <a 
+                href="https://ai.google.dev/gemini-api/docs/billing" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-botanist transition-colors"
+              >
+                View Billing Documentation
+              </a>
+            </div>
+          </div>
+        </div>
       )}
 
       {user?.isAuthenticated && (
         <Sidebar 
           currentView={currentView} 
-          onNavigate={setCurrentView} 
+          onNavigate={handleNavigate} 
           isOpen={isSidebarOpen} 
           onClose={() => setSidebarOpen(false)}
           onLogout={handleLogout}
@@ -163,7 +232,7 @@ const App: React.FC = () => {
           title={currentView} 
           onToggleSidebar={() => setSidebarOpen(true)} 
           isAuthenticated={!!user?.isAuthenticated}
-          onNavigate={setCurrentView}
+          onNavigate={handleNavigate}
         />
         <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-32 lg:pb-8">
           <div className="max-w-5xl mx-auto">
@@ -174,7 +243,7 @@ const App: React.FC = () => {
         {user?.isAuthenticated && (
           <BottomBar 
             currentView={currentView} 
-            onNavigate={setCurrentView} 
+            onNavigate={handleNavigate} 
             isPremium={user.isPremium}
           />
         )}
