@@ -1,4 +1,3 @@
-
 export enum AppView {
   LANDING = 'LANDING',
   IDENTIFY = 'IDENTIFY',
@@ -8,7 +7,8 @@ export enum AppView {
   MAP = 'MAP',
   REMINDERS = 'REMINDERS',
   GARDEN = 'GARDEN',
-  ACCOUNT = 'ACCOUNT'
+  ACCOUNT = 'ACCOUNT',
+  LIGHT_METER = 'LIGHT_METER'
 }
 
 export interface Reminder {
@@ -43,6 +43,7 @@ export interface PlantDetails {
   isToxic: boolean;
   toxicityDetails: string;
   isWeed: boolean;
+  hasAgm?: boolean; // RHS Award of Garden Merit
   careGuide: {
     watering: string;
     light: string;

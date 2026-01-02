@@ -20,6 +20,7 @@ const Header: React.FC<HeaderProps> = ({ title, onToggleSidebar, isAuthenticated
       case AppView.AUTH: return 'Welcome';
       case AppView.REMINDERS: return 'Care Schedule';
       case AppView.ACCOUNT: return 'Account Details';
+      case AppView.LIGHT_METER: return 'Botanical Lux Meter';
       default: return 'FloraGenius';
     }
   };

@@ -13,6 +13,7 @@ import MapView from './views/MapView';
 import RemindersView from './views/RemindersView';
 import GardenView from './views/GardenView';
 import AccountView from './views/AccountView';
+import LightMeterView from './views/LightMeterView';
 import NotificationOverlay from './components/NotificationOverlay';
 import { authService } from './services/authService';
 
@@ -145,6 +146,7 @@ const App: React.FC = () => {
           onNavigate={handleNavigate}
         />
       );
+      case AppView.LIGHT_METER: return <LightMeterView />;
       case AppView.DIAGNOSE: 
         if (!isPremium) return <UpgradeView isPremium={false} onUpgrade={handleUpgrade} />;
         return <DiagnosisView onResult={handleDiagnosisResult} />;

@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { PlantDetails, Diagnosis, GroundingSource } from "./types";
 
@@ -9,15 +8,16 @@ const PLANT_ID_SCHEMA = {
   type: Type.OBJECT,
   properties: {
     name: { type: Type.STRING, description: "Common name of the plant" },
-    botanicalName: { type: Type.STRING, description: "Scientific Latin name" },
+    botanicalName: { type: Type.STRING, description: "Scientific Latin name including variety/cultivar according to RHS taxonomy" },
     family: { type: Type.STRING, description: "Plant family" },
-    description: { type: Type.STRING, description: "Brief interesting description" },
-    origin: { type: Type.STRING, description: "Native region" },
+    description: { type: Type.STRING, description: "Professional botanical description focusing on unique identifying features and morphological traits as per RHS standards" },
+    origin: { type: Type.STRING, description: "Native region and natural habitat" },
     isToxic: { type: Type.BOOLEAN, description: "True if toxic to pets or humans" },
-    toxicityDetails: { type: Type.STRING, description: "Details on why it is toxic" },
-    isWeed: { type: Type.BOOLEAN, description: "True if commonly considered a weed" },
-    confidence: { type: Type.NUMBER, description: "0-1 confidence score" },
-    imageUrl: { type: Type.STRING, description: "A high-quality Unsplash image URL (from images.unsplash.com) representing a perfect botanical specimen of this exact species." },
+    toxicityDetails: { type: Type.STRING, description: "Specific details on toxins and effects" },
+    isWeed: { type: Type.BOOLEAN, description: "True if commonly considered invasive or a weed" },
+    hasAgm: { type: Type.BOOLEAN, description: "True if the plant holds the RHS Award of Garden Merit (AGM)" },
+    confidence: { type: Type.NUMBER, description: "Accuracy score (0-1) based on morphological match" },
+    imageUrl: { type: Type.STRING, description: "A high-definition, DIRECT image URL. MUST prioritize verified RHS (rhs.org.uk) image assets found via Google Search." },
     careGuide: {
       type: Type.OBJECT,
       properties: {
@@ -29,7 +29,7 @@ const PLANT_ID_SCHEMA = {
         homeRemedies: { 
           type: Type.ARRAY, 
           items: { type: Type.STRING },
-          description: "Organic or home-based remedies for common issues"
+          description: "RHS-approved organic or traditional horticultural remedies"
         }
       },
       required: ["watering", "light", "soil", "humidity", "fertilizer", "homeRemedies"]
@@ -39,23 +39,23 @@ const PLANT_ID_SCHEMA = {
       items: {
         type: Type.OBJECT,
         properties: {
-          name: { type: Type.STRING, description: "Common name of a similar plant" },
-          reason: { type: Type.STRING, description: "Why it is similar (visual or care-wise)" },
-          careMatch: { type: Type.BOOLEAN, description: "True if care needs are very similar" },
-          imageUrl: { type: Type.STRING, description: "A high-quality Unsplash image URL (from images.unsplash.com) that represents this specific plant species accurately." }
+          name: { type: Type.STRING },
+          reason: { type: Type.STRING },
+          careMatch: { type: Type.BOOLEAN },
+          imageUrl: { type: Type.STRING, description: "Verified RHS image URL for this similar plant" }
         },
         required: ["name", "reason", "careMatch", "imageUrl"]
       },
-      description: "List of 3 similar-looking or similar-care plants"
+      description: "List of 3 plants in the same RHS group or frequently confused with this species."
     }
   },
-  required: ["name", "botanicalName", "family", "description", "origin", "isToxic", "toxicityDetails", "isWeed", "confidence", "imageUrl", "careGuide", "similarPlants"]
+  required: ["name", "botanicalName", "family", "description", "origin", "isToxic", "toxicityDetails", "isWeed", "hasAgm", "confidence", "imageUrl", "careGuide", "similarPlants"]
 };
 
 const DIAGNOSIS_SCHEMA = {
   type: Type.OBJECT,
   properties: {
-    condition: { type: Type.STRING, description: "Name of the disease or issue (e.g., Root Rot, Aphids)" },
+    condition: { type: Type.STRING, description: "Name of the disease or pest according to RHS Plant Pathology" },
     severity: { type: Type.STRING, enum: ["low", "medium", "high"] },
     symptoms: { type: Type.ARRAY, items: { type: Type.STRING } },
     causes: { type: Type.ARRAY, items: { type: Type.STRING } },
@@ -64,7 +64,7 @@ const DIAGNOSIS_SCHEMA = {
     homeRemedies: { 
       type: Type.ARRAY, 
       items: { type: Type.STRING },
-      description: "Organic, natural, or common household remedies specifically to treat this health issue"
+      description: "RHS-approved natural solutions"
     }
   },
   required: ["condition", "severity", "symptoms", "causes", "treatment", "prevention", "homeRemedies"]
@@ -80,13 +80,11 @@ function extractGroundingSources(response: GenerateContentResponse): GroundingSo
     }));
 }
 
-// Explicitly typed to Promise<never> to ensure TypeScript correctly handles the throwing catch blocks
 async function handleApiError(error: any): Promise<never> {
   console.error("Gemini API Error:", error);
   const msg = error?.message || "";
   if (msg.includes("Requested entity was not found") || msg.includes("API_KEY") || msg.includes("permission")) {
     if (window.aistudio) {
-      alert("AI Service access requires a valid API key. Opening configuration...");
       await window.aistudio.openSelectKey();
     }
   }
@@ -101,7 +99,7 @@ export async function identifyPlant(base64Image: string): Promise<PlantDetails> 
       contents: [
         {
           parts: [
-            { text: "Identify this plant accurately using botanical databases. Provide detailed care instructions, check for toxicity/weed status, and fetch a high-quality botanical reference image from Unsplash. Use Google Search to verify the identification against live records." },
+            { text: "Act as an RHS Botanical Scientist. Identify this plant STRICTLY using the RHS (Royal Horticultural Society) database for details and taxonomy. SEARCH and provide the official RHS image URL (from rhs.org.uk) and specify if it has the Award of Garden Merit (AGM)." },
             { inlineData: { mimeType: "image/jpeg", data: base64Image } }
           ]
         }
@@ -109,11 +107,11 @@ export async function identifyPlant(base64Image: string): Promise<PlantDetails> 
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
-        responseSchema: PLANT_ID_SCHEMA
+        responseSchema: PLANT_ID_SCHEMA,
+        thinkingConfig: { thinkingBudget: 12000 }
       }
     });
 
-    // Ensure response.text is present before parsing
     const data = JSON.parse(response.text || "{}");
     const groundingSources = extractGroundingSources(response);
     return { ...data, id: crypto.randomUUID(), groundingSources };
@@ -127,11 +125,12 @@ export async function getPlantDetailsByName(name: string): Promise<PlantDetails>
     const ai = getAi();
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Search botanical databases for detailed information and care instructions for: ${name}. Verify scientific names and origins.`,
+      contents: `Perform an RHS database lookup for '${name}'. Return the scientific name, official description, and a verified RHS image URL. Check for AGM status.`,
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
-        responseSchema: PLANT_ID_SCHEMA
+        responseSchema: PLANT_ID_SCHEMA,
+        thinkingConfig: { thinkingBudget: 8000 }
       }
     });
 
@@ -151,7 +150,7 @@ export async function diagnosePlant(base64Image: string): Promise<Diagnosis> {
       contents: [
         {
           parts: [
-            { text: "Analyze the health of this plant by cross-referencing diagnostic symptoms from horticultural databases. Identify diseases, pests, or deficiencies. Provide a clear treatment plan including organic household home remedies. Use Google Search to find current botanical best practices." },
+            { text: "Diagnose this plant issue using RHS Plant Pathology standards. Provide RHS-approved treatments." },
             { inlineData: { mimeType: "image/jpeg", data: base64Image } }
           ]
         }
@@ -159,7 +158,8 @@ export async function diagnosePlant(base64Image: string): Promise<Diagnosis> {
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
-        responseSchema: DIAGNOSIS_SCHEMA
+        responseSchema: DIAGNOSIS_SCHEMA,
+        thinkingConfig: { thinkingBudget: 10000 }
       }
     });
 
@@ -176,17 +176,10 @@ export async function getNearbyGardenCenters(lat: number, lng: number) {
     const ai = getAi();
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: `Find the best garden centers, plant nurseries, and botanical experts near my current location (lat: ${lat}, lng: ${lng}). For each result found, find its telephone number. Ensure the results are hyper-local to these coordinates.`,
+      contents: `Find RHS-affiliated nurseries or reputable garden centers near ${lat}, ${lng}.`,
       config: {
         tools: [{ googleMaps: {} }, { googleSearch: {} }],
-        toolConfig: {
-          retrievalConfig: {
-            latLng: {
-              latitude: lat,
-              longitude: lng
-            }
-          }
-        }
+        toolConfig: { retrievalConfig: { latLng: { latitude: lat, longitude: lng } } }
       },
     });
 
@@ -204,7 +197,7 @@ export async function getDailyPlantTip(): Promise<{ title: string; tip: string }
     const ai = getAi();
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: "Provide a unique, expert-level gardening or plant care tip for today based on seasonal botanical best practices. Format as JSON with 'title' and 'tip' keys.",
+      contents: "Generate a seasonal gardening tip from RHS standards. Return as JSON.",
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -219,6 +212,6 @@ export async function getDailyPlantTip(): Promise<{ title: string; tip: string }
     });
     return JSON.parse(response.text || "{}");
   } catch (err) {
-    return handleApiError(err);
+    return { title: "RHS Seasonal Advice", tip: "Ensure your garden tools are cleaned and sharpened as per standard RHS advice." };
   }
 }

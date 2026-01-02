@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { HistoryItem, PlantDetails, Diagnosis } from '../types';
 
@@ -167,7 +166,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history }) => {
                       </div>
                       <button 
                         onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                        className={`p-4 rounded-2xl transition-all duration-300 ml-4 ${isExpanded ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-400 hover:bg-botanist/10 hover:text-botanist'}`}
+                        className={`p-4 rounded-2xl transition-all duration-300 ml-4 ${isExpanded ? 'bg-botanist text-white' : 'bg-slate-50 text-slate-400 hover:bg-botanist/10 hover:text-botanist'}`}
                       >
                         <svg className={`w-6 h-6 transition-transform duration-500 ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
